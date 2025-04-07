@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -59,6 +59,22 @@ namespace BepInEx.Preloader.Core.Patching
             return (string?)attribute?.ConstructorArguments.Single().Value;
         }
 
+        private static bool IsPreferStripInformationalVersionInfo(GeneratorExecutionContext context)
+        {
+            var bepInExAssemblyReference =
+                context.Compilation.SourceModule.ReferencedAssemblySymbols.FirstOrDefault(x =>
+                    x.Identity.Name == "BepInEx"
+                );
+
+            // BepInEx 5 doesn't support plugins having version pre-release or build metadata
+            // such as 1.0.0-beta or 1.0.0+97ec53d20958b88581680d4d3c15ba59a8900ed5
+            bool isBepInEx5 =
+                bepInExAssemblyReference is not null
+                && bepInExAssemblyReference.Identity.Version.Major == 5;
+
+            return isBepInEx5;
+        }
+
         private enum AutoType
         {
             Plugin,
@@ -110,7 +126,17 @@ namespace BepInEx.Preloader.Core.Patching
                     var arguments = attribute.ConstructorArguments.Select(x => x.IsNull ? null : (string)x.Value!).ToArray();
                     var id = arguments[0] ?? context.Compilation.AssemblyName;
                     var name = arguments[1] ?? GetAssemblyAttribute(context, nameof(AssemblyTitleAttribute)) ?? context.Compilation.AssemblyName;
-                    var version = arguments[2] ?? GetAssemblyAttribute(context, nameof(AssemblyInformationalVersionAttribute)) ?? GetAssemblyAttribute(context, nameof(AssemblyVersionAttribute));
+                    var version = arguments[2];
+                    if (version is null)
+                    {
+                        var informationalVersion =
+                            GetAssemblyAttribute(context, nameof(AssemblyInformationalVersionAttribute));
+
+                        if (informationalVersion is null)
+                            version = GetAssemblyAttribute(context, nameof(AssemblyVersionAttribute));
+                        else if (IsPreferStripInformationalVersionInfo(context))
+                            version = informationalVersion.Split('-', '+')[0];
+                    }
 
                     var attributeName = type switch
                     {
