@@ -136,6 +136,8 @@ namespace BepInEx.Preloader.Core.Patching
                             version = GetAssemblyAttribute(context, nameof(AssemblyVersionAttribute));
                         else if (IsPreferStripInformationalVersionInfo(context))
                             version = informationalVersion.Split('-', '+')[0];
+                        else
+                            version = informationalVersion;
                     }
 
                     var attributeName = type switch
