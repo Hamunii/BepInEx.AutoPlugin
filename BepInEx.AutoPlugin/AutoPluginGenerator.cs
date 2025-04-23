@@ -43,9 +43,9 @@ public sealed class AutoPluginGenerator : IIncrementalGenerator
             ctx.AddSource("BepInAutoPluginAttribute.g.cs", AttributeCode);
         });
 
-        var references = context
-            .CompilationProvider.SelectMany((compilation, _) => compilation.ReferencedAssemblyNames)
-            .Collect();
+        var references = context.CompilationProvider.Select(
+            (compilation, _) => compilation.ReferencedAssemblyNames
+        );
 
         IncrementalValueProvider<bool> isBepInEx5 = references.Select(
             (refs, _) =>
