@@ -40,7 +40,7 @@ public sealed class AutoPluginGenerator : IIncrementalGenerator
     {
         context.RegisterPostInitializationOutput(ctx =>
         {
-            ctx.AddSource("BepInAutoPluginAttribute", AttributeCode);
+            ctx.AddSource("BepInAutoPluginAttribute.g.cs", AttributeCode);
         });
 
         var references = context
