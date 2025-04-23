@@ -3,7 +3,7 @@
 [![CI](https://github.com/BepInEx/BepInEx.AutoPlugin/workflows/CI/badge.svg)](https://github.com/BepInEx/BepInEx.AutoPlugin/actions)
 [![NuGet](https://img.shields.io/endpoint?color=blue&logo=NuGet&label=NuGet&url=https://shields.kzu.io/v/BepInEx.AutoPlugin?feed=nuget.bepinex.dev/v3/index.json)](https://nuget.bepinex.dev/packages/BepInEx.AutoPlugin)
 
-Source generator that turns
+Incremental C# Source generator that turns
 
 ```cs
 [BepInAutoPlugin("com.example.ExamplePlugin")]
@@ -23,3 +23,15 @@ public class ExamplePlugin : BaseUnityPlugin
     public static string Version => "0.1.0";
 }
 ```
+
+## Configuration
+
+AutoPlugin allows stripping version build metadata to turn `1.0.0-beta+1234567890` into `1.0.0-beta` for the `Version` property by setting the following in your csproj:
+
+```xml
+<PropertyGroup>
+  <BepInAutoPluginStripBuildMetadata>true</BepInAutoPluginStripBuildMetadata>
+</PropertyGroup>
+```
+
+Note that this will do nothing on BepInEx 5 as it only accepts a version number without a pre-release version or build metadata, so it strips both.

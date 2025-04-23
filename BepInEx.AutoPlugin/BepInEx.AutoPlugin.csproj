@@ -2,9 +2,6 @@
 
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
-        <LangVersion>latest</LangVersion>
-        <Nullable>enable</Nullable>
-        <DebugType>embedded</DebugType>
 
         <VersionPrefix>1.1.0</VersionPrefix>
         <VersionSuffix>dev</VersionSuffix>
@@ -18,13 +15,28 @@
         <RepositoryUrl>https://github.com/BepInEx/BepInEx.AutoPlugin</RepositoryUrl>
         <PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
         <Description>Generates BepInPlugin attribute and static plugin info for you</Description>
+
+        <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.9.0" PrivateAssets="all" />
-        <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.2" PrivateAssets="all" />
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.12.0" PrivateAssets="all" />
+        <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.11.0" PrivateAssets="all" />
 
-        <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        <PackageReference Include="PolySharp" Version="1.15.0">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+
+        <None Include="$(TargetPath)"
+            Pack="true"
+            PackagePath="analyzers/dotnet/cs"
+            Visible="false" />
+
+        <None Include="BepInEx.AutoPlugin.props"
+            Pack="true"
+            PackagePath="build"
+            Visible="false" />
     </ItemGroup>
 
 </Project>

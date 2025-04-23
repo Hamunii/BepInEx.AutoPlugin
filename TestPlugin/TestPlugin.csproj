@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>test.TestPlugin</AssemblyName>
+    <Product>Test Plugin</Product>
+    <Version>1.0.1-beta+69</Version>
+    <TargetFramework>net9.0</TargetFramework>
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+    <BepInAutoPluginStripBuildMetadata>true</BepInAutoPluginStripBuildMetadata>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference
+      Include="BepInEx.Core"
+      Version="5.4.21" />
+
+    <ProjectReference Include="../BepInEx.AutoPlugin/BepInEx.AutoPlugin.csproj"
+      OutputItemType="Analyzer"
+      ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <Import Project="../BepInEx.AutoPlugin/BepInEx.AutoPlugin.props" />
+
+</Project>
