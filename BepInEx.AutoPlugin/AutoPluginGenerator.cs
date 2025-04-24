@@ -134,10 +134,13 @@ public sealed class AutoPluginGenerator : IIncrementalGenerator
 
     static bool IsValidPluginClass(SyntaxNode node)
     {
-        if (node is not ClassDeclarationSyntax { Parent: not TypeDeclarationSyntax })
+        if (node is not ClassDeclarationSyntax { Parent: not TypeDeclarationSyntax } classSyntax)
         {
             return false;
         }
+
+        if (!classSyntax.Modifiers.Any(SyntaxKind.PartialKeyword))
+            return false;
 
         return true;
     }
