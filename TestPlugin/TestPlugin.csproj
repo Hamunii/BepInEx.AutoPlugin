@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <AssemblyName>test.TestPlugin</AssemblyName>
-    <Product>Test Plugin</Product>
+    <Product>"Test Plugin"</Product>
     <Version>1.0.1-beta+69</Version>
     <TargetFramework>net9.0</TargetFramework>
     <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
