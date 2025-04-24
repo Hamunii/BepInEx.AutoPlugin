@@ -232,9 +232,13 @@ public sealed class AutoPluginGenerator : IIncrementalGenerator
         }
     }
 
-    public record struct PluginClass(string? Namespace, string ClassName, PropOverrides Overrides);
+    public readonly record struct PluginClass(
+        string? Namespace,
+        string ClassName,
+        PropOverrides Overrides
+    );
 
-    public record struct PropOverrides(string? Id, string? Name, string? Version);
+    public readonly record struct PropOverrides(string? Id, string? Name, string? Version);
 
-    public record struct PluginProps(string Id, string Name, string Version);
+    public readonly record struct PluginProps(string Id, string Name, string Version);
 }
