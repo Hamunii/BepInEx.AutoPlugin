@@ -109,8 +109,7 @@ public sealed class AutoPluginGenerator : IIncrementalGenerator
                 static (s, _) => IsValidPluginClass(s),
                 static (ctx, _) => ToPluginClass(ctx)
             )
-            .Where(x => x is not null)
-            .Select((x, _) => (PluginClass)x!);
+            .Where(x => x != default);
 
         context.RegisterSourceOutput(
             classesWithBepInAutoPlugin.Combine(pluginProps),
@@ -123,8 +122,7 @@ public sealed class AutoPluginGenerator : IIncrementalGenerator
                 static (s, _) => IsValidPluginClass(s),
                 static (ctx, _) => ToPluginClass(ctx)
             )
-            .Where(x => x is not null)
-            .Select((x, _) => (PluginClass)x!);
+            .Where(x => x != default);
 
         context.RegisterSourceOutput(
             classesWithPatcherAutoPlugin.Combine(pluginProps),
@@ -145,18 +143,18 @@ public sealed class AutoPluginGenerator : IIncrementalGenerator
         return true;
     }
 
-    static PluginClass? ToPluginClass(GeneratorAttributeSyntaxContext ctx)
+    static PluginClass ToPluginClass(GeneratorAttributeSyntaxContext ctx)
     {
         var target = (ClassDeclarationSyntax)ctx.TargetNode;
         if (ctx.SemanticModel.GetDeclaredSymbol(target) is not INamedTypeSymbol typeSymbol)
         {
-            return null;
+            return default;
         }
 
         var autoAttribute = ctx.Attributes.First();
 
         if (autoAttribute is null || autoAttribute.ConstructorArguments.Length != 3)
-            return null;
+            return default;
 
         string? id = autoAttribute.ConstructorArguments[0].Value as string;
         string? name = autoAttribute.ConstructorArguments[1].Value as string;
