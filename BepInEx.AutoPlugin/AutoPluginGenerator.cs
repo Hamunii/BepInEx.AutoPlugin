@@ -8,8 +8,8 @@ namespace BepInEx.AutoPlugin;
 [Generator]
 public sealed class AutoPluginGenerator : IIncrementalGenerator
 {
-    const string BepInAutoPluginAttribute = "BepInEx.BepInAutoPluginAttribute";
-    const string PatcherAutoPluginAttribute =
+    public const string BepInAutoPluginAttribute = "BepInEx.BepInAutoPluginAttribute";
+    public const string PatcherAutoPluginAttribute =
         "BepInEx.Preloader.Core.Patching.PatcherAutoPluginAttribute";
     const string BepInPluginAttribute = "BepInEx.BepInPlugin";
     const string PatcherPluginInfoAttribute = "BepInEx.Preloader.Core.Patching.PatcherPluginInfo";
