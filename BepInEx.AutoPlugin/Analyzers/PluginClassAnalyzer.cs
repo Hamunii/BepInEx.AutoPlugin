@@ -28,56 +28,77 @@ public sealed class PluginClassAnalyzer : DiagnosticAnalyzer
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
 
-        context.RegisterSyntaxNodeAction(AnalyzeClassDeclaration, SyntaxKind.ClassDeclaration);
+        context.RegisterSymbolAction(AnalyzeClassSymbol, SymbolKind.NamedType);
     }
 
-    static void AnalyzeClassDeclaration(SyntaxNodeAnalysisContext context)
+    static void AnalyzeClassSymbol(SymbolAnalysisContext context)
     {
-        var classSyntax = (ClassDeclarationSyntax)context.Node;
+        var typeSymbol = (INamedTypeSymbol)context.Symbol;
 
-        var semanticModel = context.SemanticModel;
-        var compilation = context.Compilation;
-
-        INamedTypeSymbol?[] autoAttributes =
-        [
-            compilation.GetTypeByMetadataName(AutoPluginGenerator.BepInAutoPluginAttribute),
-            compilation.GetTypeByMetadataName(AutoPluginGenerator.PatcherAutoPluginAttribute),
-        ];
-
-        var attributes = classSyntax.AttributeLists.SelectMany(attrList => attrList.Attributes);
-        var hasAutoPluginAttribute = attributes.Any(attribute =>
-        {
-            if (semanticModel.GetSymbolInfo(attribute).Symbol is not IMethodSymbol attributeSymbol)
-                return false;
-
-            foreach (var autoAttribute in autoAttributes)
-            {
-                if (
-                    SymbolEqualityComparer.Default.Equals(
-                        attributeSymbol.ContainingSymbol,
-                        autoAttribute
-                    )
-                )
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        });
-
-        if (!hasAutoPluginAttribute)
-            return;
-
-        if (classSyntax.Modifiers.Any(SyntaxKind.PartialKeyword))
-            return;
-
-        var diagnostic = Diagnostic.Create(
-            PluginClassMustBeMarkedPartial,
-            classSyntax.Identifier.GetLocation(),
-            classSyntax.Identifier.ToString()
+        bool isNotClassOrIsPartialClass = typeSymbol.DeclaringSyntaxReferences.All(
+            static syntaxReference =>
+                syntaxReference.GetSyntax() is not ClassDeclarationSyntax classSyntax
+                || classSyntax.Modifiers.Any(SyntaxKind.PartialKeyword)
         );
 
-        context.ReportDiagnostic(diagnostic);
+        if (isNotClassOrIsPartialClass)
+        {
+            return;
+        }
+
+        foreach (AttributeData attribute in typeSymbol.GetAttributes())
+        {
+            var attributeClass = attribute.AttributeClass;
+            if (attributeClass is null)
+            {
+                continue;
+            }
+
+            switch (attributeClass.Name)
+            {
+                case AutoPluginGenerator.BepInAutoPluginAttributeName:
+                    string attributeFullName = attributeClass.ToDisplayString();
+                    if (attributeFullName != AutoPluginGenerator.BepInAutoPluginAttributeFullName)
+                    {
+                        continue;
+                    }
+                    break;
+
+                case AutoPluginGenerator.PatcherAutoPluginAttributeName:
+                    attributeFullName = attributeClass.ToDisplayString();
+                    if (attributeFullName != AutoPluginGenerator.PatcherAutoPluginAttributeFullName)
+                    {
+                        continue;
+                    }
+                    break;
+
+                default:
+                    continue;
+            }
+
+            if (
+                attribute.ApplicationSyntaxReference?.GetSyntax()
+                is not AttributeSyntax attributeSyntax
+            )
+            {
+                continue;
+            }
+
+            if (
+                attributeSyntax.Parent is not AttributeListSyntax attributeList
+                || attributeList.Parent is not ClassDeclarationSyntax classDeclaration
+            )
+            {
+                continue;
+            }
+
+            var diagnostic = Diagnostic.Create(
+                PluginClassMustBeMarkedPartial,
+                classDeclaration.Identifier.GetLocation(),
+                classDeclaration.Identifier.ToString()
+            );
+
+            context.ReportDiagnostic(diagnostic);
+        }
     }
 }
