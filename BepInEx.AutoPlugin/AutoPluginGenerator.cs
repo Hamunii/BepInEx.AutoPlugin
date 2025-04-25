@@ -54,16 +54,15 @@ public sealed class AutoPluginGenerator : IIncrementalGenerator
             (compilation, _) => compilation.ReferencedAssemblyNames
         );
 
+        // BepInEx 5 doesn't support plugins having version pre-release or build metadata
+        // such as 1.0.0-beta or 1.0.0+97ec53d20958b88581680d4d3c15ba59a8900ed5
+        // so even if the user sets those in the project Version property,
+        // we need to strip them out.
         IncrementalValueProvider<bool> isBepInEx5 = references.Select(
             (refs, _) =>
             {
                 var bepInEx = refs.FirstOrDefault(r => r.Name.Equals("BepInEx"));
-
-                // BepInEx 5 doesn't support plugins having version pre-release or build metadata
-                // such as 1.0.0-beta or 1.0.0+97ec53d20958b88581680d4d3c15ba59a8900ed5
-                bool isBepInEx5 = bepInEx is not null && bepInEx.Version.Major == 5;
-
-                return isBepInEx5;
+                return bepInEx is not null && bepInEx.Version.Major == 5;
             }
         );
 
@@ -73,68 +72,55 @@ public sealed class AutoPluginGenerator : IIncrementalGenerator
                 static (info, _) =>
                 {
                     var (options, isBepInEx5) = info;
-                    options.GlobalOptions.TryGetValue(
-                        "build_property.AssemblyName",
-                        out var assemblyName
-                    );
-                    options.GlobalOptions.TryGetValue(
-                        "build_property.Product",
-                        out var productName
-                    );
-                    options.GlobalOptions.TryGetValue("build_property.Version", out var version);
-                    options.GlobalOptions.TryGetValue(
-                        "build_property.BepInAutoPluginStripBuildMetadata",
-                        out var stripMetadata
-                    );
+                    var globalOptions = options.GlobalOptions;
+                    globalOptions.TryGetValue("build_property.AssemblyName", out var assemblyName);
+                    globalOptions.TryGetValue("build_property.Product", out var productName);
+                    globalOptions.TryGetValue("build_property.Version", out var version);
 
-                    // Afaik these should always be set.
+                    // These values are from the project properties
+                    // and as such should always be set to at least default values by the SDK
+                    // unless if the user doesn't reference 'build' assets from our package.
                     assemblyName ??= "unknown";
                     productName ??= "unknown";
                     version ??= "0.0.0.0";
 
-                    bool isStripMetadata =
-                        stripMetadata?.Equals("true", StringComparison.InvariantCultureIgnoreCase)
-                        ?? false;
-
                     if (isBepInEx5)
                     {
                         version = version.Split('-', '+')[0];
-                    }
-                    else if (isStripMetadata)
-                    {
-                        version = version.Split('+')[0];
                     }
 
                     return new PluginProps(assemblyName, productName, version);
                 }
             );
 
-        IncrementalValuesProvider<PluginClass> classesWithBepInAutoPlugin = context
-            .SyntaxProvider.ForAttributeWithMetadataName(
-                BepInAutoPluginAttributeFullName,
-                static (s, _) => IsValidPluginClass(s),
-                static (ctx, _) => ToPluginClass(ctx)
-            )
-            .Where(x => x != default);
+        IncrementalValuesProvider<PluginClass> classesWithBepInAutoPlugin =
+            GetPluginClassesWithAttribute(context, BepInAutoPluginAttributeFullName);
 
         context.RegisterSourceOutput(
             classesWithBepInAutoPlugin.Combine(pluginProps),
             static (context, source) => WriteClass(context, source, BepInPluginAttribute)
         );
 
-        IncrementalValuesProvider<PluginClass> classesWithPatcherAutoPlugin = context
-            .SyntaxProvider.ForAttributeWithMetadataName(
-                PatcherAutoPluginAttributeFullName,
-                static (s, _) => IsValidPluginClass(s),
-                static (ctx, _) => ToPluginClass(ctx)
-            )
-            .Where(x => x != default);
+        IncrementalValuesProvider<PluginClass> classesWithPatcherAutoPlugin =
+            GetPluginClassesWithAttribute(context, PatcherAutoPluginAttributeFullName);
 
         context.RegisterSourceOutput(
             classesWithPatcherAutoPlugin.Combine(pluginProps),
             static (context, source) => WriteClass(context, source, PatcherPluginInfoAttribute)
         );
     }
+
+    static IncrementalValuesProvider<PluginClass> GetPluginClassesWithAttribute(
+        IncrementalGeneratorInitializationContext context,
+        string fullyQualifiedMetadataName
+    ) =>
+        context
+            .SyntaxProvider.ForAttributeWithMetadataName(
+                fullyQualifiedMetadataName,
+                predicate: static (s, _) => IsValidPluginClass(s),
+                transform: static (ctx, _) => ToPluginClass(ctx)
+            )
+            .Where(x => x != default);
 
     static bool IsValidPluginClass(SyntaxNode node)
     {
