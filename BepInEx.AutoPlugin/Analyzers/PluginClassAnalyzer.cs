@@ -21,7 +21,7 @@ public sealed class PluginClassAnalyzer : DiagnosticAnalyzer
     );
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
-        [PluginClassMustBeMarkedPartial];
+        ImmutableArray.Create(PluginClassMustBeMarkedPartial);
 
     public override void Initialize(AnalysisContext context)
     {
