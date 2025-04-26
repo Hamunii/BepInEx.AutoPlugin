@@ -2,10 +2,11 @@
 
   <PropertyGroup>
     <AssemblyName>test.TestPlugin</AssemblyName>
-    <Product>"Test Plugin"</Product>
+    <AssemblyTitle>"Test Plugin"</AssemblyTitle>
     <Version>1.0.1-beta+69</Version>
     <TargetFramework>net9.0</TargetFramework>
     <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+    <BepInAutoPluginStripBuildMetadata>true</BepInAutoPluginStripBuildMetadata>
   </PropertyGroup>
 
   <ItemGroup>

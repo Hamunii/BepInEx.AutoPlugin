@@ -45,13 +45,33 @@ public sealed class AutoPluginGenerator : IIncrementalGenerator
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        context.RegisterPostInitializationOutput(ctx =>
+        context.RegisterPostInitializationOutput(static ctx =>
         {
             ctx.AddSource("BepInAutoPluginAttribute.g.cs", AttributeCode);
         });
 
+        // First, collect all the data we might need
+        IncrementalValueProvider<string?> assemblyName = context.CompilationProvider.Select(
+            (compilation, _) => compilation.AssemblyName
+        );
+
+        IncrementalValueProvider<string?> assemblyTitle = GetStringFromUniqueAttribute(
+            context,
+            "System.Reflection.AssemblyTitleAttribute"
+        );
+
+        IncrementalValueProvider<string?> informationalVersion = GetStringFromUniqueAttribute(
+            context,
+            "System.Reflection.AssemblyInformationalVersionAttribute"
+        );
+
+        IncrementalValueProvider<string?> version = GetStringFromUniqueAttribute(
+            context,
+            "System.Reflection.AssemblyVersionAttribute"
+        );
+
         var references = context.CompilationProvider.Select(
-            (compilation, _) => compilation.ReferencedAssemblyNames
+            static (compilation, _) => compilation.ReferencedAssemblyNames
         );
 
         // BepInEx 5 doesn't support plugins having version pre-release or build metadata
@@ -59,44 +79,60 @@ public sealed class AutoPluginGenerator : IIncrementalGenerator
         // so even if the user sets those in the project Version property,
         // we need to strip them out.
         IncrementalValueProvider<bool> isBepInEx5 = references.Select(
-            (refs, _) =>
+            static (refs, _) =>
             {
                 var bepInEx = refs.FirstOrDefault(r => r.Name.Equals("BepInEx"));
                 return bepInEx is not null && bepInEx.Version.Major == 5;
             }
         );
 
-        IncrementalValueProvider<PluginProps> pluginProps = context
-            .AnalyzerConfigOptionsProvider.Combine(isBepInEx5)
-            .Select(
-                static (info, _) =>
+        IncrementalValueProvider<bool> shouldStripInformationalVersionBuildMetadata =
+            context.AnalyzerConfigOptionsProvider.Select(
+                static (options, _) =>
                 {
-                    var (options, isBepInEx5) = info;
                     var globalOptions = options.GlobalOptions;
-                    globalOptions.TryGetValue("build_property.AssemblyName", out var assemblyName);
-                    globalOptions.TryGetValue("build_property.Title", out var projectName);
-                    globalOptions.TryGetValue("build_property.Version", out var version);
+                    globalOptions.TryGetValue(
+                        "build_property.BepInAutoPluginStripBuildMetadata",
+                        out var stripMetadata
+                    );
 
-                    // 'Product' is always defined, use it as a fallback.
-                    if (string.IsNullOrEmpty(projectName))
-                    {
-                        globalOptions.TryGetValue("build_property.Product", out projectName);
-                    }
+                    bool shouldStripMetadata =
+                        stripMetadata?.Equals("true", StringComparison.InvariantCultureIgnoreCase)
+                        ?? false;
 
-                    // These values are from the project properties
-                    // and as such should always be set to at least default values by the SDK
-                    // unless if the user doesn't reference 'build' assets from our package,
-                    // in which case they are null.
-                    assemblyName ??= "unknown";
-                    projectName ??= "unknown";
-                    version ??= "0.0.0.0";
+                    return shouldStripMetadata;
+                }
+            );
+
+        // Now we have everything, combine and process the data
+        IncrementalValueProvider<PluginProps> pluginProps = assemblyName
+            .Combine(assemblyTitle)
+            .Combine(informationalVersion)
+            .Combine(version)
+            .Combine(isBepInEx5)
+            .Combine(shouldStripInformationalVersionBuildMetadata)
+            .Select(
+                static (items, _) =>
+                {
+                    var (
+                        ((((assemblyName, title), informationalVersion), version), isBepInEx5),
+                        shouldStripMetadata
+                    ) = items;
+
+                    string projectId = assemblyName ??= "unknown";
+                    string projectName = title ?? projectId;
+                    string projectVersion = informationalVersion ?? version ?? "0.0.0.0";
 
                     if (isBepInEx5)
                     {
-                        version = version.Split('-', '+')[0];
+                        projectVersion = projectVersion.Split('-', '+')[0];
+                    }
+                    else if (shouldStripMetadata)
+                    {
+                        projectVersion = projectVersion.Split('+')[0];
                     }
 
-                    return new PluginProps(assemblyName, projectName, version);
+                    return new PluginProps(projectId, projectName, projectVersion);
                 }
             );
 
@@ -116,6 +152,20 @@ public sealed class AutoPluginGenerator : IIncrementalGenerator
             static (context, source) => WriteClass(context, source, PatcherPluginInfoAttribute)
         );
     }
+
+    static IncrementalValueProvider<string?> GetStringFromUniqueAttribute(
+        IncrementalGeneratorInitializationContext context,
+        string fullyQualifiedMetadataName
+    ) =>
+        context
+            .SyntaxProvider.ForAttributeWithMetadataName(
+                fullyQualifiedMetadataName,
+                predicate: static (s, _) => true,
+                transform: static (ctx, _) =>
+                    ctx.Attributes[0].ConstructorArguments[0].Value as string
+            )
+            .Collect()
+            .Select((x, _) => x.FirstOrDefault());
 
     static IncrementalValuesProvider<PluginClass> GetPluginClassesWithAttribute(
         IncrementalGeneratorInitializationContext context,

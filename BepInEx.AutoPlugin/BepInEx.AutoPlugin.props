@@ -1,8 +1,5 @@
 <Project>
     <ItemGroup>
-        <CompilerVisibleProperty Include="AssemblyName" />
-        <CompilerVisibleProperty Include="Title" />
-        <CompilerVisibleProperty Include="Product" />
-        <CompilerVisibleProperty Include="Version" />
+        <CompilerVisibleProperty Include="BepInAutoPluginStripBuildMetadata" />
     </ItemGroup>
 </Project>
