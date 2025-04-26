@@ -74,14 +74,21 @@ public sealed class AutoPluginGenerator : IIncrementalGenerator
                     var (options, isBepInEx5) = info;
                     var globalOptions = options.GlobalOptions;
                     globalOptions.TryGetValue("build_property.AssemblyName", out var assemblyName);
-                    globalOptions.TryGetValue("build_property.Product", out var productName);
+                    globalOptions.TryGetValue("build_property.Title", out var projectName);
                     globalOptions.TryGetValue("build_property.Version", out var version);
+
+                    // 'Product' is always defined, use it as a fallback.
+                    if (string.IsNullOrEmpty(projectName))
+                    {
+                        globalOptions.TryGetValue("build_property.Product", out projectName);
+                    }
 
                     // These values are from the project properties
                     // and as such should always be set to at least default values by the SDK
-                    // unless if the user doesn't reference 'build' assets from our package.
+                    // unless if the user doesn't reference 'build' assets from our package,
+                    // in which case they are null.
                     assemblyName ??= "unknown";
-                    productName ??= "unknown";
+                    projectName ??= "unknown";
                     version ??= "0.0.0.0";
 
                     if (isBepInEx5)
@@ -89,7 +96,7 @@ public sealed class AutoPluginGenerator : IIncrementalGenerator
                         version = version.Split('-', '+')[0];
                     }
 
-                    return new PluginProps(assemblyName, productName, version);
+                    return new PluginProps(assemblyName, projectName, version);
                 }
             );
 

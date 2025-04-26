@@ -8,7 +8,7 @@ BepInEx.AutoPlugin is an incremental C# source generator that takes the followin
 ```xml
 <PropertyGroup>
   <AssemblyName>com.example.ExamplePlugin</AssemblyName>
-  <Product>ExamplePlugin</Product>
+  <Title>ExamplePlugin</Title> <!-- Or <Product/> -->
   <Version>0.1.0</Version>
 </PropertyGroup>
 ```
