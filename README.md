@@ -8,7 +8,7 @@ BepInEx.AutoPlugin is an incremental C# source generator that takes the followin
 ```xml
 <PropertyGroup>
   <AssemblyName>com.example.ExamplePlugin</AssemblyName>
-  <Title>ExamplePlugin</Title> <!-- Or <Product/> -->
+  <AssemblyTitle>ExamplePlugin</AssemblyTitle>
   <Version>0.1.0</Version>
 </PropertyGroup>
 ```
@@ -63,3 +63,15 @@ public partial class ExamplePlugin : BaseUnityPlugin
 {
 }
 ```
+
+### MSBuild Configuration
+
+AutoPlugin allows stripping version build metadata to turn `1.0.0-beta+1234567890` into `1.0.0-beta` for the `Version` property by setting the following in your csproj:
+
+```xml
+<PropertyGroup>
+  <BepInAutoPluginStripBuildMetadata>true</BepInAutoPluginStripBuildMetadata>
+</PropertyGroup>
+```
+
+Note that this will do nothing on BepInEx 5 as it only accepts a version number without a pre-release version or build metadata, so it strips both.
