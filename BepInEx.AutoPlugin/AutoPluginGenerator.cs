@@ -51,23 +51,72 @@ public sealed class AutoPluginGenerator : IIncrementalGenerator
         });
 
         // First, collect all the data we might need
-        IncrementalValueProvider<string?> assemblyName = context.CompilationProvider.Select(
-            (compilation, _) => compilation.AssemblyName
-        );
+        var assemblyData = context.CompilationProvider.Select(
+            static (compilation, _) =>
+            {
+                // This might be a little faster than
+                // ForAttributeWithMetadataName for what we're doing
+                // since the attributes should always exist.
+                var attributes = compilation.Assembly.GetAttributes();
 
-        IncrementalValueProvider<string?> assemblyTitle = GetStringFromUniqueAttribute(
-            context,
-            "System.Reflection.AssemblyTitleAttribute"
-        );
+                string? title = null;
+                string? informationalVersion = null;
+                string? version = null;
 
-        IncrementalValueProvider<string?> informationalVersion = GetStringFromUniqueAttribute(
-            context,
-            "System.Reflection.AssemblyInformationalVersionAttribute"
-        );
+                for (int i = 0; i < attributes.Length; i++)
+                {
+                    var attribute = attributes[i];
 
-        IncrementalValueProvider<string?> version = GetStringFromUniqueAttribute(
-            context,
-            "System.Reflection.AssemblyVersionAttribute"
+                    var attributeClass = attribute.AttributeClass;
+
+                    if (attributeClass == null)
+                    {
+                        continue;
+                    }
+
+                    if (attribute.ConstructorArguments.Length != 1)
+                        continue;
+
+                    string? expectedSystemNamespace = attributeClass
+                        .ContainingNamespace
+                        ?.ContainingNamespace
+                        ?.MetadataName;
+
+                    if (expectedSystemNamespace != "System")
+                        continue;
+
+                    var expectedReflectionNamespace = attributeClass
+                        .ContainingNamespace!
+                        .MetadataName;
+
+                    if (expectedReflectionNamespace != "Reflection")
+                        continue;
+
+                    var className = attributeClass.MetadataName;
+
+                    if (className == "AssemblyTitleAttribute")
+                    {
+                        title = attribute.ConstructorArguments[0].Value as string;
+                    }
+                    else if (className == "AssemblyInformationalVersionAttribute")
+                    {
+                        informationalVersion = attribute.ConstructorArguments[0].Value as string;
+                    }
+                    else if (className == "AssemblyVersionAttribute")
+                    {
+                        version = attribute.ConstructorArguments[0].Value as string;
+                    }
+
+                    if (title is not null && informationalVersion is not null)
+                    {
+                        // We did not check that version is not null because
+                        // we'll use informationalVersion over version anyways.
+                        break;
+                    }
+                }
+
+                return (compilation.AssemblyName, title, informationalVersion, version);
+            }
         );
 
         var references = context.CompilationProvider.Select(
@@ -105,17 +154,14 @@ public sealed class AutoPluginGenerator : IIncrementalGenerator
             );
 
         // Now we have everything, combine and process the data
-        IncrementalValueProvider<PluginProps> pluginProps = assemblyName
-            .Combine(assemblyTitle)
-            .Combine(informationalVersion)
-            .Combine(version)
+        IncrementalValueProvider<PluginProps> pluginProps = assemblyData
             .Combine(isBepInEx5)
             .Combine(shouldStripInformationalVersionBuildMetadata)
             .Select(
                 static (items, _) =>
                 {
                     var (
-                        ((((assemblyName, title), informationalVersion), version), isBepInEx5),
+                        ((assemblyName, title, informationalVersion, version), isBepInEx5),
                         shouldStripMetadata
                     ) = items;
 
@@ -152,20 +198,6 @@ public sealed class AutoPluginGenerator : IIncrementalGenerator
             static (context, source) => WriteClass(context, source, PatcherPluginInfoAttribute)
         );
     }
-
-    static IncrementalValueProvider<string?> GetStringFromUniqueAttribute(
-        IncrementalGeneratorInitializationContext context,
-        string fullyQualifiedMetadataName
-    ) =>
-        context
-            .SyntaxProvider.ForAttributeWithMetadataName(
-                fullyQualifiedMetadataName,
-                predicate: static (s, _) => true,
-                transform: static (ctx, _) =>
-                    ctx.Attributes[0].ConstructorArguments[0].Value as string
-            )
-            .Collect()
-            .Select((x, _) => x.FirstOrDefault());
 
     static IncrementalValuesProvider<PluginClass> GetPluginClassesWithAttribute(
         IncrementalGeneratorInitializationContext context,
