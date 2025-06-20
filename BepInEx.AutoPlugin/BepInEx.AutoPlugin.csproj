@@ -3,8 +3,8 @@
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
 
-        <VersionPrefix>1.1.0</VersionPrefix>
-        <VersionSuffix>dev</VersionSuffix>
+        <VersionPrefix>2.0.0</VersionPrefix>
+        <VersionSuffix></VersionSuffix>
 
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <IncludeBuildOutput>false</IncludeBuildOutput>
@@ -12,12 +12,20 @@
         <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
 
         <RepositoryType>git</RepositoryType>
-        <RepositoryUrl>https://github.com/BepInEx/BepInEx.AutoPlugin</RepositoryUrl>
+        <RepositoryUrl>https://github.com/Hamunii/BepInEx.AutoPlugin/tree/nuget</RepositoryUrl>
         <PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
-        <Description>Generates BepInPlugin attribute and static plugin info for you</Description>
+        <PackageId>Hamunii.BepInEx.AutoPlugin</PackageId>
+        <Description>Incremental C# source generator that generates BepInPlugin attribute and static plugin info for you.</Description>
+        <Authors>Hamunii, BepInEx</Authors>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageTags>BepInEx;PluginInfoProps;$(PackageTags)</PackageTags>
 
         <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     </PropertyGroup>
+
+    <ItemGroup>
+        <None Include="../README.md" Pack="true" PackagePath="/" />
+    </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" PrivateAssets="all" />
@@ -33,7 +41,7 @@
             PackagePath="analyzers/dotnet/cs"
             Visible="false" />
 
-        <None Include="BepInEx.AutoPlugin.props"
+        <None Include="Hamunii.BepInEx.AutoPlugin.props"
             Pack="true"
             PackagePath="build"
             Visible="false" />

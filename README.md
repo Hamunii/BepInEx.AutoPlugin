@@ -1,7 +1,6 @@
 # BepInEx.AutoPlugin
 
-[![CI](https://github.com/BepInEx/BepInEx.AutoPlugin/workflows/CI/badge.svg)](https://github.com/BepInEx/BepInEx.AutoPlugin/actions)
-[![NuGet](https://img.shields.io/endpoint?color=blue&logo=NuGet&label=NuGet&url=https://shields.kzu.io/v/BepInEx.AutoPlugin?feed=nuget.bepinex.dev/v3/index.json)](https://nuget.bepinex.dev/packages/BepInEx.AutoPlugin)
+[![NuGet](https://img.shields.io/nuget/v/Hamunii.BepInEx.AutoPlugin?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/Hamunii.BepInEx.AutoPlugin)
 
 BepInEx.AutoPlugin is an incremental C# source generator that takes the following properties from your project:
 
@@ -28,6 +27,14 @@ partial class ExamplePlugin : BaseUnityPlugin
 A `PatcherAutoPluginAttribute` also exists for BepInEx 6 preloader patchers.
 
 ## Usage
+
+Add the following to your csproj:
+
+```xml
+<ItemGroup>
+  <PackageReference Include="Hamunii.BepInEx.AutoPlugin" Version="2.0.0" PrivateAssets="all" />
+</ItemGroup>
+```
 
 Mark your plugin class partial, and decorate it with the `BepInAutoPluginAttribute`:
 
