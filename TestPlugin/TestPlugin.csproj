@@ -20,6 +20,6 @@
       ReferenceOutputAssembly="false" />
   </ItemGroup>
 
-  <Import Project="../BepInEx.AutoPlugin/BepInEx.AutoPlugin.props" />
+  <Import Project="../BepInEx.AutoPlugin/Hamunii.BepInEx.AutoPlugin.props" />
 
 </Project>

@@ -32,7 +32,7 @@ Add the following to your csproj:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="Hamunii.BepInEx.AutoPlugin" Version="2.0.0" PrivateAssets="all" />
+  <PackageReference Include="Hamunii.BepInEx.AutoPlugin" Version="2.0.*" PrivateAssets="all" />
 </ItemGroup>
 ```
 
