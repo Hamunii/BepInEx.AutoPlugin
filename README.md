@@ -6,19 +6,19 @@ BepInEx.AutoPlugin is an incremental C# source generator that takes the followin
 
 ```xml
 <PropertyGroup>
-  <AssemblyName>com.example.ExamplePlugin</AssemblyName>
+  <AssemblyName>AuthorName.ExamplePlugin</AssemblyName>
   <AssemblyTitle>ExamplePlugin</AssemblyTitle>
   <Version>0.1.0</Version>
 </PropertyGroup>
 ```
 
-And generates a partial class for your partial plugin class decorated with the `BepInAutoPluginAttribute`, decorating the generated class with the `BepInPluginAttribute` using the above properties:
+And generates a partial class for your partial plugin class decorated with the `[BepInAutoPlugin]` attribute, decorating the generated class with the `[BepInPlugin]` attribute using the above properties:
 
 ```cs
 [BepInEx.BepInPlugin(ExamplePlugin.Id, "ExamplePlugin", "0.1.0")]
 partial class ExamplePlugin : BaseUnityPlugin
 {
-    public const string Id = "com.example.ExamplePlugin";
+    public const string Id = "AuthorName.ExamplePlugin";
     public static string Name => "ExamplePlugin";
     public static string Version => "0.1.0";
 }
@@ -30,9 +30,15 @@ A `PatcherAutoPluginAttribute` also exists for BepInEx 6 preloader patchers.
 
 Add the following to your csproj:
 
+> [!warning]  
+> Version `2.1.0` of this source generator requires .NET SDK 10.  
+> If you are stuck on .NET SDK 8 or 9, use version `2.0.1` instead.
+>
+> Main feature in `2.1.0` is no more generated type conflicts for consuming projects who have public access to your projects internals and are also using this source generator (e.g. a project making use of the [InternalsVisibleToAttribute](<https://learn.microsoft.com/en-us/dotnet/api/system.runtime.compilerservices.internalsvisibletoattribute>)).
+
 ```xml
 <ItemGroup>
-  <PackageReference Include="Hamunii.BepInEx.AutoPlugin" Version="2.0.*" PrivateAssets="all" />
+  <PackageReference Include="Hamunii.BepInEx.AutoPlugin" Version="2.1.0" PrivateAssets="all" />
 </ItemGroup>
 ```
 
@@ -65,7 +71,7 @@ public partial class ExamplePlugin : BaseUnityPlugin
 AutoPlugin allows overriding any of the properties with the optional attribute arguments:
 
 ```cs
-[BepInAutoPlugin(id: "com.example.MyOverrideId", name: "My Override Name", version: "1.2.3")]
+[BepInAutoPlugin(id: "AuthorName.MyOverrideId", name: "My Override Name", version: "1.2.3")]
 public partial class ExamplePlugin : BaseUnityPlugin
 {
 }

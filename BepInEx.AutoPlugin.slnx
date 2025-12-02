@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="BepInEx.AutoPlugin/BepInEx.AutoPlugin.csproj" />
+  <Project Path="TestPlugin/TestPlugin.csproj" />
+</Solution>
