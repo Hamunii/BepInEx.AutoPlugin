@@ -31,7 +31,7 @@ A `PatcherAutoPluginAttribute` also exists for BepInEx 6 preloader patchers.
 Add the following to your csproj:
 
 > [!warning]  
-> Version `2.1.0` of this source generator requires .NET SDK 10.  
+> Version `2.1.0` of this source generator requires .NET SDK 10 or higher.  
 > If you are stuck on .NET SDK 8 or 9, use version `2.0.1` instead.
 >
 > Main feature in `2.1.0` is no more generated type conflicts for consuming projects who have public access to your projects internals and are also using this source generator (e.g. a project making use of the [InternalsVisibleToAttribute](<https://learn.microsoft.com/en-us/dotnet/api/system.runtime.compilerservices.internalsvisibletoattribute>)).
